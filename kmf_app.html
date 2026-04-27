@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KMF — Gestion Friperie</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f1117;--card:#1a1d27;--card2:#222536;--accent:#6c63ff;
+  --accent2:#00d4aa;--red:#ff4d6d;--yellow:#ffd166;--text:#e8eaf0;
+  --muted:#7b7f96;--border:#2a2d3e;--green:#06d6a0;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
+.logo{font-size:1.3rem;font-weight:800;color:var(--accent);letter-spacing:1px}
+.logo span{color:var(--accent2)}
+.nav-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.nav-tab{padding:8px 14px;border-radius:8px;cursor:pointer;font-size:.82rem;color:var(--muted);border:none;background:none;transition:.2s}
+.nav-tab:hover{background:var(--border);color:var(--text)}
+.nav-tab.active{background:var(--accent);color:#fff}
+.date-badge{font-size:.8rem;color:var(--muted);background:var(--border);padding:6px 12px;border-radius:20px}
+.page{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+@media(max-width:900px){.grid4{grid-template-columns:1fr 1fr}.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.grid4,.grid3,.grid2{grid-template-columns:1fr}}
+.kcard{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.kcard.green::before{background:var(--green)}
+.kcard.red::before{background:var(--red)}
+.kcard.yellow::before{background:var(--yellow)}
+.kcard.teal::before{background:var(--accent2)}
+.kcard-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.kcard-val{font-size:1.6rem;font-weight:700;color:var(--text)}
+.kcard-sub{font-size:.8rem;color:var(--muted);margin-top:4px}
+.kcard-icon{position:absolute;right:20px;top:20px;font-size:1.8rem;opacity:.3}
+.sec-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sec-title span{color:var(--accent)}
+.table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+thead th{background:var(--card2);color:var(--muted);padding:12px 14px;text-align:left;font-weight:600;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border);transition:.15s}
+tbody tr:hover{background:var(--card2)}
+tbody td{padding:10px 14px;color:var(--text)}
+.badge{padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-wave,.badge-WAVE{background:#1a3a5c;color:#4fc3f7}
+.badge-orangemoney,.badge-ORANGEMONEY{background:#3a2a10;color:#ffb300}
+.badge-freemoney,.badge-FREEMONEY{background:#1a3a20;color:#66bb6a}
+.badge-especes,.badge-ESPECES{background:#2a1a3a;color:#ce93d8}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:.9rem;outline:none;transition:.2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+.form-group select option{background:var(--card2)}
+.btn{padding:12px 24px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:.9rem;transition:.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5a52e0}
+.btn-success{background:var(--green);color:#000}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:6px 14px;font-size:.8rem}
+.mm-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+@media(max-width:700px){.mm-cards{grid-template-columns:1fr 1fr}}
+.mm-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center}
+.mm-logo{font-size:2rem;margin-bottom:8px}
+.mm-name{font-size:.8rem;color:var(--muted);margin-bottom:4px}
+.mm-amount{font-size:1.4rem;font-weight:800}
+.mm-wave{color:#4fc3f7}.mm-om{color:#ffb300}.mm-free{color:#66bb6a}.mm-especes{color:#ce93d8}
+.bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:24px}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:160px;padding-top:10px}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:4px}
+.bar{border-radius:6px 6px 0 0;width:100%;min-height:4px;transition:.5s}
+.bar-label{font-size:.7rem;color:var(--muted);white-space:nowrap}
+.bar-val{font-size:.65rem;color:var(--text)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px;width:90%;max-width:480px}
+.modal h2{font-size:1.1rem;margin-bottom:20px}
+.pw-input{width:100%;background:var(--card2);border:2px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:1.1rem;text-align:center;letter-spacing:4px;outline:none;margin-bottom:16px}
+.pw-input:focus{border-color:var(--accent)}
+.pw-error{color:var(--red);font-size:.85rem;text-align:center;margin-bottom:12px}
+.rapport-section{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.rapport-section h3{font-size:.95rem;font-weight:700;color:var(--accent);margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px}
+.conseil-card{background:var(--card2);border-left:4px solid var(--accent2);border-radius:8px;padding:14px;margin-bottom:12px}
+.conseil-card h4{font-size:.85rem;font-weight:700;color:var(--accent2);margin-bottom:6px}
+.conseil-card p{font-size:.82rem;color:var(--muted);line-height:1.6}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-row span:first-child{font-size:.85rem;color:var(--muted)}
+.stat-row span:last-child{font-size:.9rem;font-weight:700}
+.positive{color:var(--green)!important}.negative{color:var(--red)!important}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.filters input,.filters select{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.85rem;outline:none}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#000;padding:14px 20px;border-radius:12px;font-weight:700;font-size:.9rem;z-index:300;transform:translateY(100px);opacity:0;transition:.3s;max-width:320px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:var(--red);color:#fff}
+.toast.warn{background:var(--yellow);color:#000}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.page-title{font-size:1.4rem;font-weight:800}
+.page-title span{color:var(--accent)}
+.upload-zone{border:2px dashed var(--border);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:20px}
+.upload-zone:hover{border-color:var(--accent)}
+.upload-zone p{color:var(--muted);font-size:.9rem;margin-top:8px}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:.5s}
+.sync-badge{display:inline-flex;align-items:center;gap:6px;background:#1a3a20;color:var(--green);font-size:.75rem;font-weight:700;padding:4px 10px;border-radius:20px}
+.sync-log{background:var(--card2);border-radius:12px;padding:16px;margin-top:16px;max-height:200px;overflow-y:auto}
+.sync-log-item{font-size:.8rem;padding:6px 0;border-bottom:1px solid var(--border);color:var(--muted)}
+.sync-log-item:last-child{border-bottom:none}
+.sync-log-item strong{color:var(--text)}
+.stock-mini{display:inline-flex;align-items:center;gap:4px;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL MDP -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal">
+    <h2>🔐 Rapport Financier — Accès Sécurisé</h2>
+    <input type="password" class="pw-input" id="pwInput" placeholder="••••••••" maxlength="10">
+    <div class="pw-error" id="pwError" style="display:none">Mot de passe incorrect</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closePwModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="checkPw()">Accéder</button>
+    </div>
+  </div>
+</div>
+
+<nav>
+  <div class="logo">KMF <span>Friperie</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showPage('ventes')">🛍️ Ventes</button>
+    <button class="nav-tab" onclick="showPage('saisie')">✏️ Saisie</button>
+    <button class="nav-tab" onclick="showPage('treso')">💰 Tréso</button>
+    <button class="nav-tab" onclick="showPage('stock')">📦 Stock</button>
+    <button class="nav-tab" onclick="openRapport()">📈 Rapport</button>
+  </div>
+  <div class="date-badge" id="dateBadge"></div>
+</nav>
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div class="page-title">Vue d'ensemble <span>KMF</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <select id="filterMois" onchange="renderDashboard()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.85rem;outline:none">
+        <option value="all">Tous les mois</option>
+        <option value="3">Mars 2026</option>
+        <option value="4">Avril 2026</option>
+      </select>
+      <button class="btn btn-outline" onclick="showPage('saisie')" style="font-size:.82rem">+ Nouvelle vente</button>
+    </div>
+  </div>
+  <div class="grid4" id="kpiCards"></div>
+  <div class="grid2">
+    <div class="bar-wrap">
+      <div class="sec-title">📅 CA par semaine</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+    <div class="bar-wrap">
+      <div class="sec-title">🏷️ Top catégories</div>
+      <div id="topCats" style="padding-top:8px"></div>
+    </div>
+  </div>
+  <div class="kcard" style="margin-bottom:24px">
+    <div class="sec-title">📅 CA Journalier — Aujourd'hui</div>
+    <div id="caJour" style="font-size:2rem;font-weight:800;color:var(--accent2)">— FCFA</div>
+    <div id="caJourDetail" style="font-size:.85rem;color:var(--muted);margin-top:6px"></div>
+  </div>
+  <div class="sec-title">🕐 Dernières ventes</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Produit</th><th>Réf.</th><th>Qté</th><th>Total</th><th>Marge</th><th>Paiement</th><th>Stock restant</th></tr></thead>
+      <tbody id="lastSalesTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- VENTES -->
+<div class="page" id="page-ventes">
+  <div class="page-header">
+    <div class="page-title">Historique <span>Ventes</span></div>
+  </div>
+  <div class="filters">
+    <input type="text" id="searchVente" placeholder="🔍 Rechercher..." oninput="renderVentes()">
+    <select id="filterMoisVente" onchange="renderVentes()">
+      <option value="all">Tous les mois</option>
+      <option value="3">Mars</option>
+      <option value="4">Avril</option>
+    </select>
+    <select id="filterCat" onchange="renderVentes()">
+      <option value="all">Toutes catégories</option>
+    </select>
+    <select id="filterPaiement" onchange="renderVentes()">
+      <option value="all">Tous paiements</option>
+      <option value="WAVE">Wave</option>
+      <option value="ORANGE MONEY">Orange Money</option>
+      <option value="FREE MONEY">Free Money</option>
+      <option value="ESPECES">Espèces</option>
+    </select>
+    <div style="margin-left:auto;font-size:.85rem;color:var(--muted)" id="venteCount"></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Catégorie</th><th>Réf.</th><th>Cont.</th><th>P.U</th><th>Qté</th><th>Total</th><th>P.Achat</th><th>Marge</th><th>Paiement</th><th>Livraison</th><th>Obs.</th><th></th></tr></thead>
+      <tbody id="ventesTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SAISIE -->
+<div class="page" id="page-saisie">
+  <div class="page-header">
+    <div class="page-title">Nouvelle <span>Vente</span></div>
+    <div class="sync-badge">🔄 Sync stock automatique activée</div>
+  </div>
+
+  <!-- Info sync -->
+  <div style="background:#1a2a1a;border:1px solid var(--green);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:.85rem;color:var(--green)">
+    ✅ <strong>Synchronisation automatique active</strong> — Chaque vente enregistrée décrémente automatiquement le stock correspondant. La correspondance se fait par <strong>catégorie + description du produit</strong>.
+  </div>
+
+  <div class="kcard" style="margin-bottom:24px">
+    <div class="form-grid">
+      <div class="form-group"><label>Date *</label><input type="date" id="f_date"></div>
+      <div class="form-group">
+        <label>Catégorie Stock (pour sync) *</label>
+        <select id="f_stockref" onchange="onStockRefChange()">
+          <option value="">-- Lier au stock --</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Catégorie Produit *</label>
+        <select id="f_cat">
+          <option value="">-- Sélectionner --</option>
+          <option>Enfant crem 0-6</option><option>Enfant crem 6-12</option>
+          <option>Bebe 0-6</option><option>Bebe 6-12</option><option>Bebe Deuxieme 0-12</option>
+          <option>T-shirt 1er Homme</option><option>T-shirt 2ème Homme</option>
+          <option>Short Homme PC</option><option>Short Homme DC</option>
+          <option>Chemise Homme</option><option>Play Boy Homme</option><option>Sport Mixte</option>
+          <option>Tendenza Femme</option><option>Jeans Femme</option><option>Body Femme</option>
+          <option>Maillot de bain</option><option>Chemise Femme</option><option>Robe Femme</option>
+          <option>Veste Femme</option><option>Intimo</option><option>Pyjamas</option>
+          <option>Robe de nuit</option><option>HHR</option><option>Jupe</option>
+          <option>Rideau</option><option>Drap</option><option>Serviette</option>
+          <option>Kaki</option><option>Supercent</option><option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Référence</label><input type="text" id="f_ref" placeholder="ex: ENF-06-CREM"></div>
+      <div class="form-group"><label>Conteneur</label><input type="number" id="f_cont" value="0"></div>
+      <div class="form-group"><label>Prix Unitaire (FCFA) *</label><input type="number" id="f_pu" placeholder="ex: 130000"></div>
+      <div class="form-group"><label>Quantité vendue *</label><input type="number" id="f_qte" placeholder="ex: 2" step="0.25" min="0"></div>
+      <div class="form-group"><label>Mode de Paiement *</label>
+        <select id="f_paiement">
+          <option value="WAVE">💙 Wave</option>
+          <option value="ORANGE MONEY">🟠 Orange Money</option>
+          <option value="FREE MONEY">💚 Free Money</option>
+          <option value="ESPECES">💵 Espèces</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Réduction (FCFA)</label><input type="number" id="f_reduc" value="0"></div>
+      <div class="form-group"><label>Livraison</label>
+        <select id="f_livraison"><option value="">Non</option><option value="OUI">Oui</option></select>
+      </div>
+      <div class="form-group"><label>Prix d'Achat (FCFA) *</label><input type="number" id="f_achat" placeholder="ex: 115000"></div>
+      <div class="form-group"><label>Observations</label><input type="text" id="f_obs" placeholder="RAS..."></div>
+    </div>
+
+    <!-- Stock dispo preview -->
+    <div id="stockPreviewZone" style="display:none;margin-top:16px;background:var(--card2);border-radius:10px;padding:12px 16px;font-size:.85rem;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--muted)">📦 Stock disponible pour cet article :</span>
+        <span id="stockPreviewVal" style="font-weight:700;font-size:1rem"></span>
+      </div>
+      <div id="stockPreviewBar" style="margin-top:8px"></div>
+    </div>
+
+    <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="addVente()">✅ Enregistrer + Sync Stock</button>
+      <button class="btn btn-outline" onclick="resetForm()">🔄 Réinitialiser</button>
+      <div id="previewMarge" style="font-size:.9rem;color:var(--muted)"></div>
+    </div>
+  </div>
+
+  <!-- Import CSV -->
+  <div class="kcard">
+    <div class="sec-title">📂 Importer / Actualiser les données Excel</div>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">Exporte ton fichier KMF en CSV puis importe-le ici. Le stock sera automatiquement recalculé.</p>
+    <div class="upload-zone" onclick="document.getElementById('csvInput').click()">
+      <div style="font-size:2rem">📤</div>
+      <p>Cliquer pour importer un fichier CSV</p>
+    </div>
+    <input type="file" id="csvInput" accept=".csv,.txt" style="display:none" onchange="importCSV(event)">
+    <div id="importStatus" style="display:none;margin-top:12px">
+      <div style="font-size:.85rem;color:var(--accent2)" id="importMsg"></div>
+      <div class="progress-bar"><div class="progress-fill" id="importProgress" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRESORERIE -->
+<div class="page" id="page-treso">
+  <div class="page-header">
+    <div class="page-title">Trésorerie <span>& Dépenses</span></div>
+  </div>
+  <div class="mm-cards" id="mmCards"></div>
+  <div class="grid2">
+    <div class="kcard green"><div class="kcard-icon">💰</div><div class="kcard-label">Total encaissé</div><div class="kcard-val" id="totalEncaisse">—</div><div class="kcard-sub">Toutes périodes</div></div>
+    <div class="kcard red"><div class="kcard-icon">📦</div><div class="kcard-label">Total achats (coût)</div><div class="kcard-val" id="totalAchats">—</div><div class="kcard-sub">Stock vendu</div></div>
+  </div>
+  <div class="sec-title" style="margin-bottom:12px">➕ Enregistrer une dépense</div>
+  <div class="kcard" style="margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:flex-end">
+      <div class="form-group"><label>Date</label><input type="date" id="d_date"></div>
+      <div class="form-group"><label>Description</label><input type="text" id="d_desc" placeholder="ex: Transport, Loyer..."></div>
+      <div class="form-group"><label>Montant (FCFA)</label><input type="number" id="d_montant" placeholder="ex: 25000"></div>
+      <button class="btn btn-danger" onclick="addDepense()" style="height:42px">Ajouter</button>
+    </div>
+  </div>
+  <div class="sec-title">📋 Historique dépenses</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Description</th><th>Montant</th><th></th></tr></thead>
+      <tbody id="depensesTbody"></tbody>
+    </table>
+  </div>
+  <div style="text-align:right;margin-top:12px;font-size:.9rem;color:var(--red);font-weight:700" id="totalDepenses"></div>
+</div>
+
+<!-- STOCK -->
+<div class="page" id="page-stock">
+  <div class="page-header">
+    <div class="page-title">Suivi <span>Stock</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div class="sync-badge">🔄 Sync auto activée</div>
+      <select id="filterStockCat" onchange="renderStock()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.85rem;outline:none">
+        <option value="all">Toutes catégories</option>
+        <option value="Enfant">Enfant</option><option value="Homme">Homme</option>
+        <option value="Femme">Femme</option><option value="Maison">Maison</option><option value="Autres">Autres</option>
+      </select>
+      <input type="text" id="searchStock" placeholder="🔍 Rechercher..." oninput="renderStock()" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:.85rem;outline:none">
+    </div>
+  </div>
+
+  <div class="grid4" id="stockKpis"></div>
+
+  <div class="grid2">
+    <div class="bar-wrap"><div class="sec-title">📊 Répartition par catégorie</div><div id="stockCatChart" style="padding-top:8px"></div></div>
+    <div class="bar-wrap"><div class="sec-title">💰 Valorisation par catégorie</div><div id="stockValChart" style="padding-top:8px"></div></div>
+  </div>
+
+  <!-- Journal de sync -->
+  <div class="kcard" style="margin-bottom:24px">
+    <div class="sec-title">📋 Journal de synchronisation</div>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:12px">Chaque vente enregistrée génère automatiquement une entrée ici.</p>
+    <div class="sync-log" id="syncLog"><div style="color:var(--muted);font-size:.85rem;text-align:center;padding:12px">Aucune synchronisation enregistrée</div></div>
+  </div>
+
+  <div class="sec-title">📋 Détail du stock disponible</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date Entrée</th><th>Réf.</th><th>Catégorie</th><th>Description</th><th>Saison</th><th>Qualité</th><th>Poids</th><th>Stock Initial</th><th>Vendus (sync)</th><th>Stock Dispo</th><th>P. Unitaire</th><th>Valorisation</th><th>Alerte</th></tr></thead>
+      <tbody id="stockTbody"></tbody>
+    </table>
+  </div>
+  <div style="text-align:right;margin-top:12px;font-size:.9rem;color:var(--accent2);font-weight:700" id="stockTotal"></div>
+
+  <!-- Ajout article -->
+  <div class="sec-title" style="margin-top:24px">➕ Ajouter un article au stock</div>
+  <div class="kcard" style="margin-top:8px">
+    <div class="form-grid">
+      <div class="form-group"><label>Date Entrée</label><input type="date" id="s_date"></div>
+      <div class="form-group"><label>Référence Balle</label><input type="text" id="s_ref" placeholder="ex: HOMPREM"></div>
+      <div class="form-group"><label>Emplacement</label><input type="text" id="s_empl" value="Showroom"></div>
+      <div class="form-group"><label>Catégorie</label>
+        <select id="s_cat"><option>Enfant</option><option>Homme</option><option>Femme</option><option>Maison</option><option>Autres</option></select>
+      </div>
+      <div class="form-group"><label>Description</label><input type="text" id="s_desc" placeholder="ex: T-Shirt"></div>
+      <div class="form-group"><label>Saison</label>
+        <select id="s_saison"><option>Été</option><option>Hiver</option><option>Mi-saison</option></select>
+      </div>
+      <div class="form-group"><label>Qualité</label>
+        <select id="s_qualite"><option>Crème</option><option>1er Choix</option><option>2ème Choix</option></select>
+      </div>
+      <div class="form-group"><label>Poids (kg)</label><input type="number" id="s_poids" value="45"></div>
+      <div class="form-group"><label>Stock Initial</label><input type="number" id="s_stock" placeholder="ex: 20"></div>
+      <div class="form-group"><label>Prix Unitaire (FCFA)</label><input type="number" id="s_pu" placeholder="ex: 75000"></div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:12px">
+      <button class="btn btn-primary" onclick="addStock()">✅ Ajouter au stock</button>
+      <button class="btn btn-outline" onclick="resetStockForm()">🔄 Réinitialiser</button>
+    </div>
+  </div>
+</div>
+
+<!-- RAPPORT -->
+<div class="page" id="page-rapport">
+  <div class="page-header">
+    <div class="page-title">Rapport <span>Financier & Conseils</span></div>
+    <button class="btn btn-outline btn-sm" onclick="lockRapport()">🔒 Verrouiller</button>
+  </div>
+  <div id="rapportContent"></div>
+</div>
+
+<script>
+// ================= DATA =================
+let DATA = [];
+let DEPENSES = [];
+let STOCK = [];
+let SYNC_LOG = [];
+let rapportUnlocked = false;
+
+const STOCK_BASE = [
+  {id:'s0',date:'18/04/2026',mois:4,ref:'ENFPREM',empl:'Showroom',cat:'Enfant',desc:'Mixte 0 - 6',saison:'Été',qualite:'Crème',poids:45,stockInit:28,pu:115000},
+  {id:'s1',date:'18/04/2026',mois:4,ref:'ENFPREM',empl:'Showroom',cat:'Enfant',desc:'Mixte 0 - 12',saison:'Été',qualite:'Crème',poids:45,stockInit:4,pu:150000},
+  {id:'s2',date:'18/04/2026',mois:4,ref:'ENFPREM',empl:'Showroom',cat:'Enfant',desc:'Mixte 6 - 12',saison:'Été',qualite:'Crème',poids:45,stockInit:23,pu:100000},
+  {id:'s3',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Capri',saison:'Été',qualite:'1er Choix',poids:45,stockInit:1,pu:50000},
+  {id:'s4',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'T-Shirt',saison:'Été',qualite:'1er Choix',poids:45,stockInit:15,pu:85000},
+  {id:'s5',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Short',saison:'Été',qualite:'1er Choix',poids:45,stockInit:13,pu:75000},
+  {id:'s6',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Veste',saison:'Été',qualite:'1er Choix',poids:45,stockInit:30,pu:52500},
+  {id:'s7',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Chemise',saison:'Été',qualite:'1er Choix',poids:45,stockInit:10,pu:45000},
+  {id:'s8',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Kaki',saison:'Été',qualite:'1er Choix',poids:45,stockInit:4,pu:50000},
+  {id:'s9',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Intimo',saison:'Été',qualite:'1er Choix',poids:45,stockInit:11,pu:75000},
+  {id:'s10',date:'18/04/2026',mois:4,ref:'ENFPREM',empl:'Showroom',cat:'Enfant',desc:'Jouet',saison:'Été',qualite:'1er Choix',poids:45,stockInit:3,pu:40000},
+  {id:'s11',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Veste',saison:'Été',qualite:'1er Choix',poids:45,stockInit:3,pu:40000},
+  {id:'s12',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Chemise',saison:'Été',qualite:'1er Choix',poids:45,stockInit:5,pu:75000},
+  {id:'s13',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Kaki',saison:'Été',qualite:'1er Choix',poids:45,stockInit:5,pu:90000},
+  {id:'s14',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Cargo',saison:'Été',qualite:'1er Choix',poids:45,stockInit:3,pu:90000},
+  {id:'s15',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Super 100',saison:'Été',qualite:'1er Choix',poids:45,stockInit:1,pu:70000},
+  {id:'s16',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Bas',saison:'Été',qualite:'1er Choix',poids:45,stockInit:5,pu:70000},
+  {id:'s17',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Chemise de nuit',saison:'Été',qualite:'1er Choix',poids:45,stockInit:4,pu:42500},
+  {id:'s18',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Robe',saison:'Été',qualite:'1er Choix',poids:45,stockInit:9,pu:72500},
+  {id:'s19',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Jupe',saison:'Été',qualite:'1er Choix',poids:45,stockInit:7,pu:45000},
+  {id:'s20',date:'18/04/2026',mois:4,ref:'FEMPREM',empl:'Showroom',cat:'Femme',desc:'Jeans',saison:'Été',qualite:'1er Choix',poids:45,stockInit:35,pu:52500},
+  {id:'s21',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Sport',saison:'Été',qualite:'1er Choix',poids:45,stockInit:6,pu:120000},
+  {id:'s22',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Casquette',saison:'Été',qualite:'1er Choix',poids:45,stockInit:2,pu:70000},
+  {id:'s23',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Jeans',saison:'Été',qualite:'1er Choix',poids:45,stockInit:4,pu:75000},
+  {id:'s24',date:'18/04/2026',mois:4,ref:'HOMPREM',empl:'Showroom',cat:'Homme',desc:'Tenue travail',saison:'Été',qualite:'1er Choix',poids:45,stockInit:9,pu:65000},
+  {id:'s25',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'HHR',saison:'Été',qualite:'1er Choix',poids:45,stockInit:64,pu:55000},
+  {id:'s26',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'Tapis',saison:'Été',qualite:'1er Choix',poids:45,stockInit:5,pu:65000},
+  {id:'s27',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'Oreiller',saison:'Été',qualite:'1er Choix',poids:45,stockInit:3,pu:55000},
+  {id:'s28',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'Mouchoir',saison:'Été',qualite:'1er Choix',poids:45,stockInit:10,pu:50000},
+  {id:'s29',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'Rideaux',saison:'Été',qualite:'1er Choix',poids:45,stockInit:14,pu:55000},
+  {id:'s30',date:'18/04/2026',mois:4,ref:'MAIPREM',empl:'Showroom',cat:'Maison',desc:'Draps',saison:'Été',qualite:'1er Choix',poids:45,stockInit:7,pu:70000},
+  {id:'s31',date:'18/04/2026',mois:4,ref:'AUTRES',empl:'Showroom',cat:'Autres',desc:'Peignoir',saison:'Été',qualite:'1er Choix',poids:45,stockInit:3,pu:65000},
+  {id:'s32',date:'18/04/2026',mois:4,ref:'AUTRES',empl:'Showroom',cat:'Autres',desc:'Foulard',saison:'Été',qualite:'1er Choix',poids:45,stockInit:5,pu:50000},
+  {id:'s33',date:'18/04/2026',mois:4,ref:'AUTRES',empl:'Showroom',cat:'Autres',desc:'Ties',saison:'Été',qualite:'1er Choix',poids:45,stockInit:1,pu:30000},
+];
+
+// ================= SYNC ENGINE =================
+// Correspondance vente → stock par mots-clés
+const SYNC_MAP = [
+  {keywords:['enfant','bebe','0-6','06','crem','vrac enf'],stockDesc:['Mixte 0 - 6','Mixte 0 - 12']},
+  {keywords:['6-12','612'],stockDesc:['Mixte 6 - 12','Mixte 0 - 12']},
+  {keywords:['t-shirt','tshirt','shirt'],stockDesc:['T-Shirt']},
+  {keywords:['short'],stockDesc:['Short','Capri']},
+  {keywords:['chemise hm','chemise ho','chemis'],stockDesc:['Chemise']},
+  {keywords:['playboy','play boy'],stockDesc:['Super 100']},
+  {keywords:['sport','mixte sport'],stockDesc:['Sport']},
+  {keywords:['tendenza','jeans fm','jeans fe','jean fe','jean fm'],stockDesc:['Jeans','Veste','Chemise']},
+  {keywords:['jupe'],stockDesc:['Jupe']},
+  {keywords:['body','bodi','bodies'],stockDesc:['Intimo']},
+  {keywords:['maillot'],stockDesc:['Maillot de bain']},
+  {keywords:['intimo','sous'],stockDesc:['Intimo']},
+  {keywords:['robe de nuit','nuit'],stockDesc:['Chemise de nuit']},
+  {keywords:['robe'],stockDesc:['Robe']},
+  {keywords:['pyjama'],stockDesc:['Pyjamas']},
+  {keywords:['hhr'],stockDesc:['HHR']},
+  {keywords:['rideau'],stockDesc:['Rideaux']},
+  {keywords:['drap'],stockDesc:['Draps']},
+  {keywords:['serviette'],stockDesc:['Mouchoir']},
+  {keywords:['peignoir'],stockDesc:['Peignoir']},
+  {keywords:['kaki'],stockDesc:['Kaki']},
+  {keywords:['supercent','super 100'],stockDesc:['Super 100']},
+  {keywords:['cargo'],stockDesc:['Cargo']},
+  {keywords:['casquette'],stockDesc:['Casquette']},
+  {keywords:['tapis'],stockDesc:['Tapis']},
+  {keywords:['oreiller'],stockDesc:['Oreiller']},
+  {keywords:['foulard'],stockDesc:['Foulard']},
+  {keywords:['ties'],stockDesc:['Ties']},
+  {keywords:['tenue travail','travail'],stockDesc:['Tenue travail']},
+  {keywords:['vest','veste fm','veste fe'],stockDesc:['Veste']},
+  {keywords:['bas'],stockDesc:['Bas']},
+];
+
+function findStockItem(catVente, descVente) {
+  const needle = (catVente+' '+descVente).toLowerCase();
+  for(const rule of SYNC_MAP){
+    if(rule.keywords.some(k=>needle.includes(k))){
+      const match = STOCK.find(s=>rule.stockDesc.some(d=>s.desc.toLowerCase().includes(d.toLowerCase())));
+      if(match) return match;
+    }
+  }
+  return null;
+}
+
+function syncStockFromVente(vente) {
+  // If manually linked via f_stockref
+  if(vente.stockId) {
+    const item = STOCK.find(s=>s.id===vente.stockId);
+    if(item){ item.vendu = (item.vendu||0) + Math.ceil(vente.qte); return item; }
+  }
+  // Auto match
+  const item = findStockItem(vente.cat, vente.cat);
+  if(item){ item.vendu = (item.vendu||0) + Math.ceil(vente.qte); return item; }
+  return null;
+}
+
+function getStockDispo(item){ return Math.max(0, item.stockInit - (item.vendu||0)); }
+
+// ================= INIT =================
+function init(){
+  // Load base stock
+  STOCK = STOCK_BASE.map(s=>({...s, vendu:0}));
+
+  // Load saved
+  try{
+    const sv = localStorage.getItem('kmf_sales_new');
+    if(sv) DATA = JSON.parse(sv);
+    const dv = localStorage.getItem('kmf_dep');
+    if(dv) DEPENSES = JSON.parse(dv);
+    const stv = localStorage.getItem('kmf_stock_vendu');
+    if(stv){ const m=JSON.parse(stv); STOCK.forEach(s=>{if(m[s.id])s.vendu=m[s.id];}); }
+    const slv = localStorage.getItem('kmf_synclog');
+    if(slv) SYNC_LOG = JSON.parse(slv);
+    const sextra = localStorage.getItem('kmf_stock_extra');
+    if(sextra) STOCK.push(...JSON.parse(sextra));
+  }catch(e){}
+
+  // Populate history from raw
+  DATA = [...parseRaw(), ...DATA.filter(d=>d.isNew)];
+
+  // Populate stock select in form
+  populateStockSelect();
+
+  // Populate cat filter
+  const cats = [...new Set(DATA.map(d=>d.cat))].sort();
+  const sel = document.getElementById('filterCat');
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+
+  document.getElementById('dateBadge').textContent = new Date().toLocaleDateString('fr-SN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('d_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('s_date').value = new Date().toISOString().split('T')[0];
+
+  ['f_pu','f_qte','f_achat','f_reduc'].forEach(id=>document.getElementById(id).addEventListener('input',updateMargePreview));
+
+  renderDashboard(); renderVentes(); renderTreso(); renderStock();
+}
+
+function populateStockSelect(){
+  const sel = document.getElementById('f_stockref');
+  sel.innerHTML = '<option value="">-- Lier au stock (optionnel) --</option>';
+  STOCK.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;
+    o.textContent=`${s.cat} — ${s.desc} (dispo: ${getStockDispo(s)})`;
+    sel.appendChild(o);
+  });
+}
+
+function onStockRefChange(){
+  const id = document.getElementById('f_stockref').value;
+  const zone = document.getElementById('stockPreviewZone');
+  if(!id){zone.style.display='none';return;}
+  const item = STOCK.find(s=>s.id===id);
+  if(!item){zone.style.display='none';return;}
+  const dispo = getStockDispo(item);
+  zone.style.display='block';
+  const pct = item.stockInit>0?(dispo/item.stockInit*100):0;
+  const col = dispo<=2?'var(--red)':dispo<=5?'var(--yellow)':'var(--green)';
+  document.getElementById('stockPreviewVal').innerHTML = `<span style="color:${col}">${dispo} unités</span> / ${item.stockInit} initiaux`;
+  document.getElementById('stockPreviewBar').innerHTML = `<div class="progress-bar"><div style="height:6px;border-radius:3px;background:${col};width:${pct}%;transition:.5s"></div></div>`;
+}
+
+// ================= PARSE RAW =================
+const RAW = `05/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	5	650000	WAVE		 	115000	575000	75000
+05/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE		 	100000	100000	30000
+05/03/2026	3	Short hm prem	HOM-SHORT-PC	0	85000	1	85000	WAVE	0	 	72500	72500	12500
+06/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	1	130000	WAVE	0	 	115000	115000	15000
+06/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE	0	 	100000	100000	30000
+06/03/2026	3	Tendenza Fmm	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	5000	25	50000	50000	5000
+07/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	2	260000	WAVE	0	50	115000	230000	30000
+07/03/2026	3	Tendenza Fmm	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	0	 	50000	50000	5000
+09/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	2	260000	WAVE	0	50	115000	230000	30000
+09/03/2026	3	T-shirt 1ch hm	HOM-TSHIRT-PC	0	90000	1	90000	WAVE	0	 	80000	80000	10000
+10/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	1	130000	WAVE	0	 	115000	115000	15000
+10/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	2	260000	WAVE	0	17	100000	200000	60000
+10/03/2026	3	T-shirt 1ch hm	HOM-TSHIRT-PC	0	90000	1	90000	WAVE	0	 	75000	75000	15000
+10/03/2026	3	Tendenza Fmm	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	0	 	50000	50000	5000
+11/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	3	390000	WAVE	0	 	115000	345000	45000
+11/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE	0	 	100000	100000	30000
+11/03/2026	3	Play boy hm	HOM-PLAYBOY-PC	0	85000	1	85000	WAVE	0	 	77500	77500	7500
+11/03/2026	3	Tendenza Fmm	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	0	 	50000	50000	5000
+12/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	1	130000	WAVE	0	 	115000	115000	15000
+13/03/2026	3	Enfant crem 0-6	ENF-06-CREM	0	130000	1	130000	WAVE	0	50	115000	115000	15000
+13/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE	0	 	100000	100000	30000
+13/03/2026	3	Play boy hm	HOM-PLAYBOY-PC	0	85000	1	85000	WAVE	0	 	77500	77500	7500
+14/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	2	260000	WAVE	0	 	100000	200000	60000
+16/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE	0	 	100000	100000	30000
+16/03/2026	3	Play boy hm	HOM-PLAYBOY-PC	0	85000	2	170000	WAVE	0	 	77500	155000	15000
+17/03/2026	3	Play boy hm	HOM-PLAYBOY-PC	0	85000	1	85000	WAVE	0	 	77500	77500	7500
+18/03/2026	3	T-shirt 1ch hm	HOM-TSHIRT-PC	0	90000	1	90000	WAVE	0	 	82500	82500	7500
+19/03/2026	3	Chemise hm	HOM-CHEMIS-PC	0	80000	1	80000	WAVE	0	 	85000	85000	-5000
+19/03/2026	3	Sport mxt	MIXTE-SPORT-PC	0	125000	1	125000	WAVE	0	 	117500	117500	7500
+23/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	5	275000	WAVE	0	OUI	50000	250000	25000
+23/03/2026	3	Bal sport mixte	MIXTE-SPORT-PC	0	120000	1	120000	WAVE	0	OUI	115000	115000	5000
+24/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	5	275000	WAVE	0	OUI	50000	250000	25000
+24/03/2026	3	Bal bebe 2nde	ENF-06-DC	0	65000	1	65000	WAVE	0	OUI	55000	55000	10000
+24/03/2026	3	1/2 chemise hm	HOM-CHEMIS-PC	0	90000	0.5	45000	WAVE	0	OUI	42500	21250	23750
+25/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE	0	OUI	100000	100000	30000
+25/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	2	110000	WAVE	0	OUI	50000	100000	10000
+25/03/2026	3	Carton playboy hm	HOM-PLAYBOY-PC	0	85000	1	85000	WAVE	0	OUI	80000	80000	5000
+26/03/2026	3	T-shirt 2 hm	HOM-TSHIRT-DC	0	42500	4	170000	WAVE	0	OUI	35000	140000	30000
+26/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	0	OUI	50000	50000	5000
+26/03/2026	3	Bal short 2 hm	HOM-SHORT-DC	0	42500	2	85000	WAVE	0	NON	35000	70000	15000
+27/03/2026	3	T-shirt 2 hm	HOM-TSHIRT-DC	0	42500	2	85000	WAVE	0	NON	35000	70000	15000
+27/03/2026	3	Bal short 2 hm	HOM-SHORT-DC	0	42500	3	127500	WAVE	0	NON	35000	105000	22500
+27/03/2026	3	Bal jeans fm	FEM-JEANS-PC	0	60000	2	120000	WAVE	0	NON	52500	105000	15000
+27/03/2026	3	Bodi femme	FEM-BODIES-PC	0	50000	1	50000	WAVE	0	NON	40000	40000	10000
+28/03/2026	3	T-shirt 2 hm	HOM-TSHIRT-DC	0	42500	3	127500	WAVE	0	NON	35000	105000	22500
+28/03/2026	3	Bal short 2 hm	HOM-SHORT-DC	0	42500	3	127500	WAVE	0	NON	35000	105000	22500
+28/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	WAVE	0	 	50000	50000	5000
+28/03/2026	3	Bal jeans fm	FEM-JEANS-PC	0	60000	2	120000	WAVE	0	 	52500	105000	15000
+28/03/2026	3	Bodi femme	FEM-BODIES-PC	0	50000	2	100000	WAVE	0	 	40000	80000	20000
+28/03/2026	3	Enfant crem 6-12	ENF-612-CREM	0	130000	1	130000	WAVE		 	100000	100000	30000
+30/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	4	220000	WAVE		 	50000	200000	20000
+30/03/2026	3	Bal short 2 hm	HOM-SHORT-DC	0	42500	1	42500	WAVE		 	35000	35000	7500
+30/03/2026	3	1/2 short	HOM-SHORT-DC	0	42500	0.5	21250	WAVE		 	17500	8750	12500
+31/03/2026	3	Bebe Deuxieme 0-12	ENF-012-DC	0	60000	2	120000	WAVE		 	57500	115000	5000
+31/03/2026	3	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	5	275000	WAVE		 	50000	250000	25000
+31/03/2026	3	1/2 short	HOM-SHORT-DC	0	42500	0.5	21250	WAVE		 	17500	8750	12500
+01/04/2026	4	Bebe Deuxieme 0-12	ENF-012-DC	0	67500	1	67500	WAVE		 	57500	57500	10000
+01/04/2026	4	1/2 T-shirt hm	HOM-TSHIRT-PC	0	90000	0.5	45000	WAVE		 	40000	20000	25000
+02/04/2026	4	Bebe 0-6	ENF-06-DC	0	125000	1	125000	WAVE		 	115000	115000	10000
+02/04/2026	4	1/4 T-shirt hm	HOM-TSHIRT-PC	0	90000	0.25	22500	WAVE		 	21250	5313	17188
+02/04/2026	4	Rideau	MAIS-RIDEAU-PC	0	55000	1	55000	WAVE		 	50000	50000	5000
+03/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	42500	2	85000	WAVE		 	35000	70000	15000
+03/04/2026	4	Carton short	HOM-SHORT-PC	0	76250	1	76250	WAVE		 	70000	70000	6250
+03/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	52500	3	157500	WAVE		 	50000	150000	7500
+03/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	40000	3	120000	WAVE		 	35000	105000	15000
+03/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	WAVE		 	50000	50000	5000
+03/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	37500	1	37500	WAVE		 	35000	35000	2500
+04/04/2026	4	Carton short	HOM-SHORT-PC	0	75000	2	150000	WAVE		 	70000	140000	10000
+04/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	WAVE		 	50000	50000	5000
+06/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	52500	1	52500	WAVE		 	50000	50000	2500
+06/04/2026	4	Bebe 0-6	ENF-06-PC	0	120000	1	120000	WAVE		 	115000	115000	5000
+06/04/2026	4	1/2 short deuxieme	HOM-SHORT-DC	0	42500	0.5	21250	WAVE		 	17500	8750	12500
+06/04/2026	4	Maillot de bain	FEM-MAILLOT-PC	0	50000	2	100000	WAVE		 	42500	85000	15000
+06/04/2026	4	Bebe Deuxieme 0-12	ENF-012-DC	0	65500	3	196500	WAVE		 	57500	172500	24000
+06/04/2026	4	1/2 T-shirt 2 hm	HOM-TSHIRT-DC	0	42500	0.5	21250	WAVE		 	17500	8750	12500
+06/04/2026	4	1/2 T-shirt 1	HOM-TSHIRT-PC	0	90000	0.5	45000	WAVE		 	41250	20625	24375
+06/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	37500	1	37500	WAVE		 	35000	35000	2500
+07/04/2026	4	Short	HOM-SHORT-PC	0	75000	1	75000	WAVE		 	70000	70000	5000
+07/04/2026	4	1/4 T-shirt 1	HOM-TSHIRT-PC	0	90000	0.25	22500	WAVE		 	20625	5156	17344
+07/04/2026	4	Supercent	HOM-S100-PC	0	40000	1	40000	WAVE		 	35000	35000	5000
+08/04/2026	4	1/2 Short Premier	HOM-SHORT-PC	0	90000	1	90000	WAVE		 	35000	35000	55000
+08/04/2026	4	T-shirt	HOM-SHIRT-PC	0	85000	1	85000	WAVE		 	80000	80000	5000
+08/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	WAVE		 	50000	50000	5000
+08/04/2026	4	Serviette blanche	MAIS-SERVIETTE-PC	0	75000	1	75000	WAVE		 	70000	70000	5000
+09/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	52500	3	157500	WAVE		 	50000	150000	7500
+09/04/2026	4	T-shirt	HOM-SHIRT-PC	0	88500	1	88500	WAVE		 	80000	80000	8500
+09/04/2026	4	1/2 T-shirt 1	HOM-TSHIRT-PC	0	90000	0.5	45000	WAVE		 	40000	20000	25000
+09/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	37500	1	37500	WAVE		 	35000	35000	2500
+10/04/2026	4	T-shirt 2 hm	HOM-TSHIRT-DC	0	37500	1	37500	WAVE		 	35000	35000	2500
+10/04/2026	4	T-shirt	HOM-SHIRT-PC	0	85000	1	85000	WAVE		 	80000	80000	5000
+10/04/2026	4	T-shirt	HOM-SHIRT-PC	0	80000	1	80000	WAVE		 	77500	77500	2500
+10/04/2026	4	Short	HOM-SHORT-PC	0	76500	1	76500	WAVE		 	70000	70000	6500
+10/04/2026	4	Maillot de bain	FEM-MAILLOT-PC	0	50000	1	50000	WAVE		 	42500	42500	7500
+10/04/2026	4	Bebe 6-12	ENF-612-CREM	0	130000	1	130000	WAVE		 	100000	100000	30000
+11/04/2026	4	Bebe 6-12	ENF-612-PC	0	120000	1	120000	WAVE		 	100000	100000	20000
+13/04/2026	4	Bebe 6-12	ENF-13-PC	0	130000	1	130000	WAVE		 	100000	100000	30000
+13/04/2026	4	Bebe Deuxieme 0-12	ENF-012-DC	0	65000	1	65000	 		 	57500	57500	7500
+13/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	 		 	50000	50000	5000
+13/04/2026	4	T-shirt	HOM-SHIRT-PC	0	90000	0.5	45000	 		 	80000	40000	5000
+13/04/2026	4	1/2 T-shirt	HOM-T-DC	0	42500	0.5	21250	 		 	40000	20000	1250
+13/04/2026	4	1/2 Body femme	FEM-BODIES-PC	0	50000	0.5	25000	 		 	22500	11250	13750
+13/04/2026	4	1/2 Short	ENF-13-PC	0	76500	0.5	38250	 		 	35000	17500	20750
+14/04/2026	4	Bebe 6-12	ENF-14-PC	0	130000	1	130000	 		 	115000	115000	15000
+14/04/2026	4	T-Shirt	MAIS-T-PC	0	90000	1	90000	 		 	80000	80000	10000
+14/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	1	55000	 		 	50000	50000	5000
+15/04/2026	4	Bebe 6-12	ENF-15-PC	0	115000	1	115000	 		 	100000	100000	15000
+15/04/2026	4	1/2 short	HOM-SHORT-DC	0	76500	0.5	38250	 		 	35000	17500	20750
+15/04/2026	4	Bodi femme	FEM-BODIES-PC	0	50000	1	50000	 		 	42500	42500	7500
+16/04/2026	4	Maillot de bain	FEM-MAILLOT-PC	0	50000	1	50000	 		 	42500	42500	7500
+16/04/2026	4	1/2 short deuxieme	HOM-SHORT-DC	0	42500	0.5	21250	 		 	17500	8750	12500
+16/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	52500	1	52500	 		 	50000	50000	2500
+16/04/2026	4	Bebe Deuxieme 0-12	ENF-012-DC	0	67500	1	67500	 		 	57500	57500	10000
+17/04/2026	4	Intimo	FEM-SOUS-PC	0	35000	1	35000	 		 	30000	30000	5000
+18/04/2026	4	Maillot de bain	FEM-MAILLOT-PC	0	50000	1	50000	 		 	42500	42500	7500
+18/04/2026	4	Bebe 6-12	ENF-15-PC	0	130000	1	130000	 		 	100000	100000	30000
+20/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	5	275000	 		 	50000	250000	25000
+20/04/2026	4	Carton playboy	HOM-PLAYBOY-PC	0	85000	1	85000	 		 	75000	75000	10000
+20/04/2026	4	Short	HOM-SHORT-PC	0	75000	1	75000	 		 	70000	70000	5000
+21/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	0	55000	2	110000	 		 	50000	100000	10000
+21/04/2026	4	1/4 T-shirt 1	HOM-TSHIRT-PC	0	90000	0.25	22500	 		 	80000	20000	2500
+22/04/2026	4	Crem 0-6	ENF-06-CREM	1	130000	1	130000	 		 	115000	115000	15000
+22/04/2026	4	Bebe 0-6	ENF-06-CREM	1	125000	1	125000	 		 	115000	115000	10000
+22/04/2026	4	T-shirt	HOM-TSHIRT-PC	1	90000	2	180000	 		 	80000	160000	20000
+22/04/2026	4	Short	HOM-SHORT-PC	1	76250	1	76250	 		 	70000	70000	6250
+22/04/2026	4	Jeans FM	FEM-JEAN-PC	1	61500	2	123000	 		 	57500	115000	8000
+22/04/2026	4	Jeans FM	FEM-JEAN-PC	1	62500	1	62500	 		 	57500	57500	5000
+22/04/2026	4	Jeans FM	FEM-JEAN-PC	1	65000	1	65000	 		 	57500	57500	7500
+22/04/2026	4	Vest FM	FEM-VEST-PC	1	65000	1	65000	 		 	52500	52500	12500
+22/04/2026	4	Chemise FM	FEM-CHEMISE-PC	1	65000	1	65000	 		 	52500	52500	12500
+22/04/2026	4	Bal FM tendenza	FEM-TENDENZA-PC	1	55000	1	55000	 		 	50000	50000	5000
+22/04/2026	4	Pyjamas		1	72500	1	72500	 		 	57500	57500	15000
+22/04/2026	4	Pyjamas		1	75000	1	75000	 		 	57500	57500	17500
+22/04/2026	4	Robe de nuit		1	55000	1	55000	 		 	42500	42500	12500
+22/04/2026	4	HHR		1	60000	1	60000	 		 	52500	52500	7500
+23/04/2026	4	Robe Femme ete		1	72500	2	145000	 		 	67500	135000	10000
+23/04/2026	4	Crem 0-6	ENF-06-CREM	1	130000	3	390000	 		 	112500	337500	52500
+23/04/2026	4	Bebe 0-6	ENF-06-PC	1	120000	1	120000	 		 	112500	112500	7500
+23/04/2026	4	Crem Special 0-6	ENF-06-CREM	1	165000	1	165000	 		 	130000	130000	35000
+23/04/2026	4	Robe de nuit	FEM-ROBE-PC	1	52500	1	52500	 		 	42500	42500	10000
+24/04/2026	4	Robe Femme ete		1	80000	3	240000	 		 	70000	210000	30000
+24/04/2026	4	Chemise FM		1	60000	1	60000	 		 	52500	52500	7500
+24/04/2026	4	Short Deuxieme		1	42500	1	42500	 		 	35000	35000	7500
+24/04/2026	4	Rideau		1	60000	1	60000	 		 	52500	52500	7500
+24/04/2026	4	1/2 Kaki		1	100000	0.5	50000	 		 	87500	43750	6250
+24/04/2026	4	Bebe 0-6		1	130000	1	130000	 		 	115000	115000	15000
+24/04/2026	4	1/2 T-Shirt		1	90000	0.5	45000	 		 	80000	40000	5000
+24/04/2026	4	1/2 Bas		1	77000	0.5	38500	 		 	70000	35000	3500
+25/04/2026	4	Bal FM tendenza		1	55000	1	55000	 		 	50000	50000	5000
+25/04/2026	4	Bebe 0-6		1	125000	1	125000	 		 	115000	115000	10000
+25/04/2026	4	Jupe		1	55000	1	55000	 		 	40000	40000	15000
+25/04/2026	4	1/2 Kaki		1	100000	0.5	50000	 		 	87500	43750	6250
+25/04/2026	4	Short		1	75000	2	150000	 		 	70000	140000	10000
+25/04/2026	4	T-Shirt		1	90000	1	90000	 		 	80000	80000	10000
+25/04/2026	4	Jeans femme		1	61000	2	122000	 		 	52500	105000	17000
+25/04/2026	4	1/2 Short		1	76500	0.5	38250	 		 	70000	35000	3250
+26/04/2026	4	T-Shirt 1er		1	90000	1	90000	 		 	80000	80000	10000`;
+
+function parseRaw(){
+  return RAW.trim().split('\n').map(l=>{
+    const p=l.split('\t');
+    const ds=(p[0]||'').trim();
+    const [d,m,y]=ds.split('/');
+    return{date:ds,dateObj:new Date(`${y}-${m}-${d}`),mois:parseInt(p[1])||0,
+      cat:(p[2]||'').trim(),ref:(p[3]||'').trim(),cont:parseInt(p[4])||0,
+      pu:parseFloat(p[5])||0,qte:parseFloat(p[6])||0,total:parseFloat(p[7])||0,
+      paiement:(p[8]||'WAVE').trim()||'WAVE',reduc:parseFloat(p[9])||0,
+      livraison:(p[10]||'').trim(),achat:parseFloat(p[11])||0,
+      prixAchatTotal:parseFloat(p[12])||0,marge:parseFloat(p[13])||0,
+      obs:(p[14]||'').trim()};
+  }).filter(r=>r.total>0);
+}
+
+// ================= HELPERS =================
+function fmt(n){return Math.round(n).toLocaleString('fr-FR')+' FCFA';}
+function fmtN(n){return Math.round(n).toLocaleString('fr-FR');}
+function formatDateFR(dt){const d=String(dt.getDate()).padStart(2,'0'),m=String(dt.getMonth()+1).padStart(2,'0'),y=dt.getFullYear();return`${d}/${m}/${y}`;}
+function getWeek(dt){const d=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const y=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-y)/86400000)+1)/7);}
+function filterData(moisVal){return moisVal==='all'?DATA:DATA.filter(d=>d.mois===parseInt(moisVal));}
+function paiementClass(p){return (p||'').toUpperCase().replace(/\s/g,'');}
+
+// ================= DASHBOARD =================
+function renderDashboard(){
+  const mois=document.getElementById('filterMois').value;
+  const d=filterData(mois);
+  const totalCA=d.reduce((s,r)=>s+r.total,0);
+  const totalMarge=d.reduce((s,r)=>s+r.marge,0);
+  const txMarge=totalCA>0?(totalMarge/totalCA*100).toFixed(1):0;
+  const nbVentes=d.length;
+  const todayData=DATA.filter(r=>r.date===formatDateFR(new Date()));
+  const caAuj=todayData.reduce((s,r)=>s+r.total,0);
+  const margeAuj=todayData.reduce((s,r)=>s+r.marge,0);
+  document.getElementById('caJour').textContent=fmt(caAuj);
+  document.getElementById('caJourDetail').textContent=`${todayData.length} vente(s) aujourd'hui | Marge : ${fmt(margeAuj)}`;
+  document.getElementById('kpiCards').innerHTML=`
+    <div class="kcard teal"><div class="kcard-icon">💰</div><div class="kcard-label">Chiffre d'Affaires</div><div class="kcard-val">${fmt(totalCA)}</div><div class="kcard-sub">${nbVentes} ventes</div></div>
+    <div class="kcard green"><div class="kcard-icon">📈</div><div class="kcard-label">Marge Brute</div><div class="kcard-val">${fmt(totalMarge)}</div><div class="kcard-sub">Taux : ${txMarge}%</div></div>
+    <div class="kcard yellow"><div class="kcard-icon">🏷️</div><div class="kcard-label">Panier Moyen</div><div class="kcard-val">${nbVentes>0?fmt(totalCA/nbVentes):'—'}</div><div class="kcard-sub">par transaction</div></div>
+    <div class="kcard red"><div class="kcard-icon">📦</div><div class="kcard-label">Coût Achats</div><div class="kcard-val">${fmt(d.reduce((s,r)=>s+r.prixAchatTotal,0))}</div><div class="kcard-sub">stock vendu</div></div>`;
+  const semaines={};
+  d.forEach(r=>{const[dd,mm,yy]=r.date.split('/');const dt=new Date(`${yy}-${mm}-${dd}`);const sem=`S${getWeek(dt)}`;semaines[sem]=(semaines[sem]||0)+r.total;});
+  const semKeys=Object.keys(semaines).sort();
+  const maxSem=Math.max(...Object.values(semaines),1);
+  document.getElementById('barChart').innerHTML=semKeys.map(k=>`
+    <div class="bar-col">
+      <div class="bar-val">${(semaines[k]/1000000).toFixed(1)}M</div>
+      <div class="bar" style="height:${Math.max(semaines[k]/maxSem*140,4)}px;background:linear-gradient(180deg,var(--accent),var(--accent2))"></div>
+      <div class="bar-label">${k}</div>
+    </div>`).join('');
+  const cats={};
+  d.forEach(r=>{cats[r.cat]=(cats[r.cat]||0)+r.total;});
+  const topCats=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxCat=topCats[0]?topCats[0][1]:1;
+  document.getElementById('topCats').innerHTML=topCats.map(([k,v])=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px"><span>${k}</span><span style="color:var(--accent2)">${fmt(v)}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${v/maxCat*100}%"></div></div>
+    </div>`).join('');
+  const last=[...DATA].sort((a,b)=>b.dateObj-a.dateObj).slice(0,8);
+  document.getElementById('lastSalesTbody').innerHTML=last.map(r=>{
+    const stockItem=findStockItem(r.cat,r.cat);
+    const dispo=stockItem?getStockDispo(stockItem):null;
+    const stockCol=dispo===null?'var(--muted)':dispo<=2?'var(--red)':dispo<=5?'var(--yellow)':'var(--green)';
+    return`<tr>
+      <td>${r.date}</td><td>${r.cat}</td>
+      <td style="color:var(--muted);font-size:.8rem">${r.ref||'—'}</td>
+      <td>${r.qte}</td>
+      <td style="font-weight:700">${fmt(r.total)}</td>
+      <td class="${r.marge>=0?'positive':'negative'}">${fmt(r.marge)}</td>
+      <td><span class="badge badge-${paiementClass(r.paiement)}">${r.paiement||'—'}</span></td>
+      <td>${dispo!==null?`<span style="color:${stockCol};font-weight:700">${dispo} u.</span>`:'—'}</td>
+    </tr>`;}).join('');
+}
+
+// ================= VENTES =================
+function renderVentes(){
+  const search=document.getElementById('searchVente').value.toLowerCase();
+  const mois=document.getElementById('filterMoisVente').value;
+  const cat=document.getElementById('filterCat').value;
+  const pmt=document.getElementById('filterPaiement').value;
+  let d=DATA;
+  if(mois!=='all')d=d.filter(r=>r.mois===parseInt(mois));
+  if(cat!=='all')d=d.filter(r=>r.cat===cat);
+  if(pmt!=='all')d=d.filter(r=>r.paiement===pmt);
+  if(search)d=d.filter(r=>(r.cat+r.ref+r.obs).toLowerCase().includes(search));
+  d=[...d].sort((a,b)=>b.dateObj-a.dateObj);
+  document.getElementById('venteCount').textContent=`${d.length} lignes — Total : ${fmt(d.reduce((s,r)=>s+r.total,0))}`;
+  document.getElementById('ventesTbody').innerHTML=d.map(r=>`
+    <tr>
+      <td>${r.date}</td><td>${r.cat}</td>
+      <td style="color:var(--muted);font-size:.78rem">${r.ref||'—'}</td>
+      <td>${r.cont}</td><td>${fmt(r.pu)}</td><td>${r.qte}</td>
+      <td style="font-weight:700">${fmt(r.total)}</td>
+      <td>${fmt(r.achat)}</td>
+      <td class="${r.marge>=0?'positive':'negative'}">${fmt(r.marge)}</td>
+      <td><span class="badge badge-${paiementClass(r.paiement)}">${r.paiement||'—'}</span></td>
+      <td>${r.livraison||'—'}</td>
+      <td style="color:var(--muted);font-size:.78rem">${r.obs||'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteVente(this)" data-idx="${DATA.indexOf(r)}">✕</button></td>
+    </tr>`).join('');
+}
+
+function deleteVente(btn){
+  const idx=parseInt(btn.dataset.idx);
+  if(!confirm('Supprimer cette vente ?'))return;
+  DATA.splice(idx,1);
+  saveAll();renderDashboard();renderVentes();
+  showToast('Vente supprimée');
+}
+
+// ================= SAISIE =================
+function updateMargePreview(){
+  const pu=parseFloat(document.getElementById('f_pu').value)||0;
+  const qte=parseFloat(document.getElementById('f_qte').value)||0;
+  const achat=parseFloat(document.getElementById('f_achat').value)||0;
+  const reduc=parseFloat(document.getElementById('f_reduc').value)||0;
+  const total=pu*qte-reduc;
+  const marge=total-achat*qte;
+  const tx=total>0?(marge/total*100).toFixed(1):0;
+  const col=marge>=0?'var(--green)':'var(--red)';
+  document.getElementById('previewMarge').innerHTML=`Total : <strong>${fmt(total)}</strong> | Marge : <strong style="color:${col}">${fmt(marge)}</strong> (${tx}%)`;
+}
+
+function addVente(){
+  const date=document.getElementById('f_date').value;
+  const cat=document.getElementById('f_cat').value;
+  const pu=parseFloat(document.getElementById('f_pu').value)||0;
+  const qte=parseFloat(document.getElementById('f_qte').value)||0;
+  const achat=parseFloat(document.getElementById('f_achat').value)||0;
+  if(!date||!cat||!pu||!qte||!achat){showToast('Remplir tous les champs obligatoires (*)',true);return;}
+  const[y,m,d]=date.split('-');
+  const dateStr=`${d}/${m}/${y}`;
+  const reduc=parseFloat(document.getElementById('f_reduc').value)||0;
+  const total=pu*qte-reduc;
+  const marge=total-achat*qte;
+  const stockId=document.getElementById('f_stockref').value||null;
+  const row={
+    date:dateStr,dateObj:new Date(date),mois:parseInt(m),cat,
+    ref:document.getElementById('f_ref').value,cont:parseInt(document.getElementById('f_cont').value)||0,
+    pu,qte,total,paiement:document.getElementById('f_paiement').value,
+    reduc,livraison:document.getElementById('f_livraison').value,
+    achat,prixAchatTotal:achat*qte,marge,obs:document.getElementById('f_obs').value,
+    stockId,isNew:true
+  };
+  DATA.push(row);
+
+  // === SYNC STOCK ===
+  let syncedItem = null;
+  if(stockId){
+    const item=STOCK.find(s=>s.id===stockId);
+    if(item){item.vendu=(item.vendu||0)+Math.ceil(qte);syncedItem=item;}
+  } else {
+    syncedItem = findStockItem(cat,cat);
+    if(syncedItem) syncedItem.vendu=(syncedItem.vendu||0)+Math.ceil(qte);
+  }
+
+  // Log sync
+  const logEntry={
+    time:new Date().toLocaleString('fr-FR'),
+    vente:`${qte}x ${cat}`,
+    stockDesc:syncedItem?syncedItem.desc:'Non trouvé',
+    stockDispo:syncedItem?getStockDispo(syncedItem):null,
+    matched:!!syncedItem
+  };
+  SYNC_LOG.unshift(logEntry);
+  if(SYNC_LOG.length>50) SYNC_LOG.pop();
+
+  saveAll();
+  renderDashboard();renderVentes();renderStock();
+  populateStockSelect();
+  resetForm();
+
+  if(syncedItem){
+    const dispo=getStockDispo(syncedItem);
+    if(dispo<=0) showToast(`⚠️ RUPTURE STOCK : ${syncedItem.desc} — plus de stock disponible !`,'warn');
+    else if(dispo<=3) showToast(`⚠️ Stock bas : ${syncedItem.desc} — ${dispo} unité(s) restante(s)`,'warn');
+    else showToast(`✅ Vente enregistrée — Stock ${syncedItem.desc} : ${dispo} restants`);
+  } else {
+    showToast('✅ Vente enregistrée (correspondance stock non trouvée automatiquement)');
+  }
+}
+
+function resetForm(){
+  ['f_cat','f_ref','f_pu','f_qte','f_achat','f_obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_cont').value='0';
+  document.getElementById('f_reduc').value='0';
+  document.getElementById('f_livraison').value='';
+  document.getElementById('f_stockref').value='';
+  document.getElementById('stockPreviewZone').style.display='none';
+  document.getElementById('previewMarge').innerHTML='';
+}
+
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    document.getElementById('importStatus').style.display='block';
+    document.getElementById('importMsg').textContent=`Traitement de ${lines.length} lignes...`;
+    document.getElementById('importProgress').style.width='30%';
+    setTimeout(()=>{
+      const newData=[];
+      lines.forEach(line=>{
+        const p=line.split(/[,;\t]/);
+        if(p.length<8)return;
+        const ds=(p[0]||'').trim().replace(/"/g,'');
+        if(!ds.match(/\d{2}\/\d{2}\/\d{4}/))return;
+        const[d,m,y]=ds.split('/');
+        const total=parseFloat((p[7]||'0').replace(/\s/g,''))||0;
+        if(total<=0)return;
+        newData.push({
+          date:ds,dateObj:new Date(`${y}-${m}-${d}`),mois:parseInt(m)||0,
+          cat:(p[2]||'').trim().replace(/"/g,''),ref:(p[3]||'').trim(),
+          cont:parseInt(p[4])||0,pu:parseFloat((p[5]||'0').replace(/\s/g,''))||0,
+          qte:parseFloat(p[6])||0,total,
+          paiement:(p[8]||'WAVE').trim()||'WAVE',reduc:parseFloat((p[9]||'0').replace(/\s/g,''))||0,
+          livraison:(p[10]||'').trim(),achat:parseFloat((p[11]||'0').replace(/\s/g,''))||0,
+          prixAchatTotal:parseFloat((p[12]||'0').replace(/\s/g,''))||0,
+          marge:parseFloat((p[13]||'0').replace(/\s/g,''))||0,
+          obs:(p[14]||'').trim(),isNew:true
+        });
+      });
+      DATA=[...parseRaw(),...DATA.filter(d=>d.isNew),...newData];
+      document.getElementById('importProgress').style.width='100%';
+      document.getElementById('importMsg').textContent=`✅ ${newData.length} lignes importées !`;
+      saveAll();renderDashboard();renderVentes();renderTreso();
+      showToast(`${newData.length} lignes importées !`);
+    },600);
+  };
+  reader.readAsText(file,'UTF-8');
+}
+
+// ================= TRESORERIE =================
+function renderTreso(){
+  const byPmt={};
+  DATA.forEach(r=>{const k=(r.paiement||'').trim()||'Non renseigné';byPmt[k]=(byPmt[k]||0)+r.total;});
+  const mmMap={
+    'WAVE':{icon:'💙',cls:'mm-wave',label:'Wave'},
+    'ORANGE MONEY':{icon:'🟠',cls:'mm-om',label:'Orange Money'},
+    'FREE MONEY':{icon:'💚',cls:'mm-free',label:'Free Money'},
+    'ESPECES':{icon:'💵',cls:'mm-especes',label:'Espèces'}
+  };
+  document.getElementById('mmCards').innerHTML=Object.entries(mmMap).map(([k,v])=>`
+    <div class="mm-card">
+      <div class="mm-logo">${v.icon}</div>
+      <div class="mm-name">${v.label}</div>
+      <div class="mm-amount ${v.cls}">${fmt(byPmt[k]||0)}</div>
+      <div style="font-size:.75rem;color:var(--muted);margin-top:4px">${DATA.filter(d=>(d.paiement||'').trim()===k).length} transactions</div>
+    </div>`).join('');
+  document.getElementById('totalEncaisse').textContent=fmt(DATA.reduce((s,r)=>s+r.total,0));
+  document.getElementById('totalAchats').textContent=fmt(DATA.reduce((s,r)=>s+r.prixAchatTotal,0));
+  renderDepenses();
+}
+
+function addDepense(){
+  const date=document.getElementById('d_date').value;
+  const desc=document.getElementById('d_desc').value;
+  const montant=parseFloat(document.getElementById('d_montant').value)||0;
+  if(!date||!desc||!montant){showToast('Remplir tous les champs',true);return;}
+  const[y,m,d]=date.split('-');
+  DEPENSES.push({date:`${d}/${m}/${y}`,desc,montant});
+  saveAll();renderDepenses();
+  document.getElementById('d_desc').value='';document.getElementById('d_montant').value='';
+  showToast('Dépense enregistrée');
+}
+
+function renderDepenses(){
+  const total=DEPENSES.reduce((s,d)=>s+d.montant,0);
+  document.getElementById('depensesTbody').innerHTML=DEPENSES.map((d,i)=>`
+    <tr>
+      <td>${d.date}</td><td>${d.desc}</td>
+      <td class="negative">${fmt(d.montant)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteDepense(${i})">✕</button></td>
+    </tr>`).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Aucune dépense</td></tr>';
+  document.getElementById('totalDepenses').textContent=`Total dépenses : ${fmt(total)}`;
+}
+
+function deleteDepense(i){DEPENSES.splice(i,1);saveAll();renderDepenses();}
+
+// ================= STOCK =================
+const catColors={'Enfant':'var(--accent2)','Homme':'var(--accent)','Femme':'var(--red)','Maison':'var(--yellow)','Autres':'var(--muted)'};
+
+function renderStock(){
+  const catF=document.getElementById('filterStockCat').value;
+  const search=document.getElementById('searchStock').value.toLowerCase();
+  let d=STOCK;
+  if(catF!=='all')d=d.filter(r=>r.cat===catF);
+  if(search)d=d.filter(r=>(r.desc+r.cat+r.ref).toLowerCase().includes(search));
+
+  const totalStock=STOCK.reduce((s,r)=>s+getStockDispo(r),0);
+  const totalVal=STOCK.reduce((s,r)=>s+getStockDispo(r)*r.pu,0);
+  const byCat={};
+  STOCK.forEach(r=>{byCat[r.cat]=(byCat[r.cat]||0)+getStockDispo(r);});
+  const alertes=STOCK.filter(r=>getStockDispo(r)<=3).length;
+
+  document.getElementById('stockKpis').innerHTML=`
+    <div class="kcard teal"><div class="kcard-icon">📦</div><div class="kcard-label">Total Disponible</div><div class="kcard-val">${fmtN(totalStock)}</div><div class="kcard-sub">unités en stock</div></div>
+    <div class="kcard yellow"><div class="kcard-icon">💰</div><div class="kcard-label">Valeur Stock</div><div class="kcard-val">${fmt(totalVal)}</div><div class="kcard-sub">au prix vente</div></div>
+    <div class="kcard ${alertes>0?'red':'green'}"><div class="kcard-icon">⚠️</div><div class="kcard-label">Articles en alerte</div><div class="kcard-val">${alertes}</div><div class="kcard-sub">stock ≤ 3 unités</div></div>
+    <div class="kcard"><div class="kcard-icon">🔄</div><div class="kcard-label">Sorties (sync)</div><div class="kcard-val">${fmtN(STOCK.reduce((s,r)=>s+(r.vendu||0),0))}</div><div class="kcard-sub">via ventes</div></div>`;
+
+  const cats=['Enfant','Homme','Femme','Maison','Autres'];
+  const maxCat=Math.max(...cats.map(c=>byCat[c]||0),1);
+  document.getElementById('stockCatChart').innerHTML=cats.map(c=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px">
+        <span>${c}</span><span style="color:${catColors[c]}">${fmtN(byCat[c]||0)} u.</span>
+      </div>
+      <div class="progress-bar"><div style="height:6px;border-radius:3px;background:${catColors[c]};width:${((byCat[c]||0)/maxCat*100)}%;transition:.5s"></div></div>
+    </div>`).join('');
+
+  const catVal={};
+  STOCK.forEach(r=>{catVal[r.cat]=(catVal[r.cat]||0)+getStockDispo(r)*r.pu;});
+  const maxVal=Math.max(...cats.map(c=>catVal[c]||0),1);
+  document.getElementById('stockValChart').innerHTML=cats.map(c=>`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px">
+        <span>${c}</span><span style="color:${catColors[c]}">${fmt(catVal[c]||0)}</span>
+      </div>
+      <div class="progress-bar"><div style="height:6px;border-radius:3px;background:${catColors[c]};width:${((catVal[c]||0)/maxVal*100)}%;transition:.5s"></div></div>
+    </div>`).join('');
+
+  // Sync log
+  document.getElementById('syncLog').innerHTML=SYNC_LOG.length===0
+    ?'<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:12px">Aucune synchronisation enregistrée</div>'
+    :SYNC_LOG.slice(0,20).map(l=>`
+      <div class="sync-log-item">
+        <strong>${l.time}</strong> — ${l.vente} 
+        → ${l.matched?`<span style="color:var(--green)">✅ ${l.stockDesc}</span> (reste: <strong>${l.stockDispo}</strong>)`
+                     :`<span style="color:var(--red)">❌ correspondance non trouvée</span>`}
+      </div>`).join('');
+
+  // Table
+  document.getElementById('stockTbody').innerHTML=d.map(r=>{
+    const dispo=getStockDispo(r);
+    const val=dispo*r.pu;
+    const alerte=dispo<=0?'<span style="color:var(--red);font-weight:700">🔴 Rupture</span>':dispo<=2?'<span style="color:var(--red);font-weight:700">⚠️ Critique</span>':dispo<=5?'<span style="color:var(--yellow)">🟡 Faible</span>':'<span style="color:var(--green)">✅ OK</span>';
+    const dispoPct=r.stockInit>0?(dispo/r.stockInit*100):0;
+    const col=dispo<=2?'var(--red)':dispo<=5?'var(--yellow)':'var(--green)';
+    return`<tr>
+      <td>${r.date}</td>
+      <td style="color:var(--muted);font-size:.8rem">${r.ref}</td>
+      <td><span style="color:${catColors[r.cat]};font-weight:600">${r.cat}</span></td>
+      <td>${r.desc}</td><td>${r.saison}</td>
+      <td style="font-size:.8rem;color:var(--muted)">${r.qualite}</td>
+      <td>${r.poids}</td>
+      <td>${r.stockInit}</td>
+      <td style="color:var(--red)">${r.vendu||0}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:${col};font-weight:700;font-size:1rem">${dispo}</span>
+          <div style="width:50px"><div class="progress-bar"><div style="height:4px;border-radius:2px;background:${col};width:${dispoPct}%"></div></div></div>
+        </div>
+      </td>
+      <td>${fmt(r.pu)}</td>
+      <td style="font-weight:700;color:var(--accent2)">${fmt(val)}</td>
+      <td>${alerte}</td>
+    </tr>`;}).join('');
+
+  const totalFiltered=d.reduce((s,r)=>s+getStockDispo(r)*r.pu,0);
+  document.getElementById('stockTotal').textContent=`Valeur filtrée : ${fmt(totalFiltered)} | Valeur totale stock : ${fmt(totalVal)}`;
+}
+
+function addStock(){
+  const date=document.getElementById('s_date').value;
+  const desc=document.getElementById('s_desc').value;
+  const pu=parseFloat(document.getElementById('s_pu').value)||0;
+  const stockInit=parseInt(document.getElementById('s_stock').value)||0;
+  if(!date||!desc||!pu||!stockInit){showToast('Remplir les champs obligatoires',true);return;}
+  const[y,m,d]=date.split('-');
+  const newId=`s_new_${Date.now()}`;
+  STOCK.push({id:newId,date:`${d}/${m}/${y}`,mois:parseInt(m),
+    ref:document.getElementById('s_ref').value||'—',
+    empl:document.getElementById('s_empl').value||'Showroom',
+    cat:document.getElementById('s_cat').value,desc,
+    saison:document.getElementById('s_saison').value,
+    qualite:document.getElementById('s_qualite').value,
+    poids:parseFloat(document.getElementById('s_poids').value)||45,
+    stockInit,pu,vendu:0,isNew:true});
+  saveAll();populateStockSelect();renderStock();resetStockForm();
+  showToast('✅ Article ajouté au stock');
+}
+
+function resetStockForm(){
+  ['s_ref','s_desc','s_stock','s_pu'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s_poids').value='45';
+  document.getElementById('s_date').value=new Date().toISOString().split('T')[0];
+}
+
+// ================= SAVE =================
+function saveAll(){
+  try{
+    localStorage.setItem('kmf_sales_new',JSON.stringify(DATA.filter(d=>d.isNew)));
+    localStorage.setItem('kmf_dep',JSON.stringify(DEPENSES));
+    const m={};STOCK.forEach(s=>{if(s.vendu)m[s.id]=s.vendu;});
+    localStorage.setItem('kmf_stock_vendu',JSON.stringify(m));
+    localStorage.setItem('kmf_synclog',JSON.stringify(SYNC_LOG));
+    localStorage.setItem('kmf_stock_extra',JSON.stringify(STOCK.filter(s=>s.isNew)));
+  }catch(e){}
+}
+
+// ================= RAPPORT =================
+function openRapport(){
+  if(rapportUnlocked){showPage('rapport');return;}
+  document.getElementById('pwModal').classList.add('open');
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwError').style.display='none';
+  setTimeout(()=>document.getElementById('pwInput').focus(),100);
+}
+function closePwModal(){document.getElementById('pwModal').classList.remove('open');}
+function checkPw(){
+  if(document.getElementById('pwInput').value==='1234567'){
+    closePwModal();rapportUnlocked=true;buildRapport();showPage('rapport');
+  }else{document.getElementById('pwError').style.display='block';document.getElementById('pwInput').value='';}
+}
+document.getElementById('pwInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkPw();});
+function lockRapport(){rapportUnlocked=false;showPage('dashboard');}
+
+function buildRapport(){
+  const totalCA=DATA.reduce((s,r)=>s+r.total,0);
+  const totalMarge=DATA.reduce((s,r)=>s+r.marge,0);
+  const totalAchat=DATA.reduce((s,r)=>s+r.prixAchatTotal,0);
+  const txMarge=totalCA>0?(totalMarge/totalCA*100).toFixed(1):0;
+  const totalDep=DEPENSES.reduce((s,d)=>s+d.montant,0);
+  const resultatNet=totalMarge-totalDep;
+  const mars=DATA.filter(d=>d.mois===3),avril=DATA.filter(d=>d.mois===4);
+  const caM=mars.reduce((s,r)=>s+r.total,0),caA=avril.reduce((s,r)=>s+r.total,0);
+  const margeM=mars.reduce((s,r)=>s+r.marge,0),margeA=avril.reduce((s,r)=>s+r.marge,0);
+  const evo=caM>0?((caA-caM)/caM*100).toFixed(1):0;
+  const byCat={};
+  DATA.forEach(r=>{byCat[r.cat]=(byCat[r.cat]||{ca:0,marge:0,qte:0});byCat[r.cat].ca+=r.total;byCat[r.cat].marge+=r.marge;byCat[r.cat].qte+=r.qte;});
+  const topProd=Object.entries(byCat).sort((a,b)=>b[1].ca-a[1].ca).slice(0,5);
+  const negProd=Object.entries(byCat).filter(([k,v])=>v.marge<0);
+  const rupturesStock=STOCK.filter(r=>getStockDispo(r)===0);
+  const alertesStock=STOCK.filter(r=>getStockDispo(r)>0&&getStockDispo(r)<=3);
+  const totalStockVal=STOCK.reduce((s,r)=>s+getStockDispo(r)*r.pu,0);
+
+  document.getElementById('rapportContent').innerHTML=`
+  <div class="rapport-section">
+    <h3>📊 Synthèse Financière Globale</h3>
+    <div class="stat-row"><span>Chiffre d'Affaires Total</span><span>${fmt(totalCA)}</span></div>
+    <div class="stat-row"><span>Coût Total des Achats</span><span class="negative">${fmt(totalAchat)}</span></div>
+    <div class="stat-row"><span>Marge Brute</span><span class="${totalMarge>=0?'positive':'negative'}">${fmt(totalMarge)} (${txMarge}%)</span></div>
+    <div class="stat-row"><span>Total Dépenses</span><span class="negative">${fmt(totalDep)}</span></div>
+    <div class="stat-row"><span>Résultat Net Estimé</span><span class="${resultatNet>=0?'positive':'negative'}">${fmt(resultatNet)}</span></div>
+    <div class="stat-row"><span>Valeur Stock Restant</span><span style="color:var(--accent2)">${fmt(totalStockVal)}</span></div>
+    <div class="stat-row"><span>Transactions</span><span>${DATA.length}</span></div>
+  </div>
+  <div class="rapport-section">
+    <h3>📅 Comparaison Mars vs Avril 2026</h3>
+    <div class="stat-row"><span>CA Mars 2026</span><span>${fmt(caM)}</span></div>
+    <div class="stat-row"><span>CA Avril 2026 (partiel)</span><span>${fmt(caA)}</span></div>
+    <div class="stat-row"><span>Évolution CA</span><span class="${evo>=0?'positive':'negative'}">${evo>=0?'+':''}${evo}%</span></div>
+    <div class="stat-row"><span>Marge Mars / Avril</span><span>${fmt(margeM)} / ${fmt(margeA)}</span></div>
+  </div>
+  ${rupturesStock.length>0?`
+  <div class="rapport-section">
+    <h3>🔴 Ruptures de stock détectées</h3>
+    ${rupturesStock.map(r=>`<div class="stat-row"><span>${r.cat} — ${r.desc}</span><span class="negative">Rupture (${r.vendu||0} vendus)</span></div>`).join('')}
+  </div>`:''}
+  ${alertesStock.length>0?`
+  <div class="rapport-section">
+    <h3>⚠️ Articles en stock critique (≤ 3 unités)</h3>
+    ${alertesStock.map(r=>`<div class="stat-row"><span>${r.cat} — ${r.desc}</span><span style="color:var(--yellow)">${getStockDispo(r)} restant(s)</span></div>`).join('')}
+  </div>`:''}
+  <div class="rapport-section">
+    <h3>🏆 Top 5 Produits par CA</h3>
+    ${topProd.map(([k,v])=>`<div class="stat-row"><span>${k}</span><span>${fmt(v.ca)} <span style="color:var(--accent2);font-size:.8rem">(marge: ${fmt(v.marge)})</span></span></div>`).join('')}
+  </div>
+  ${negProd.length>0?`
+  <div class="rapport-section">
+    <h3>⚠️ Produits à Marge Négative</h3>
+    ${negProd.map(([k,v])=>`<div class="stat-row"><span>${k}</span><span class="negative">${fmt(v.marge)}</span></div>`).join('')}
+  </div>`:''}
+  <div class="rapport-section">
+    <h3>💡 Conseils Stratégiques</h3>
+    <div class="conseil-card"><h4>🎯 Optimisation du mix produit</h4><p>La catégorie Enfant crem (0-6 et 6-12) génère les marges les plus élevées (~30 000 FCFA/ballot). Augmenter leur part à 40% du portefeuille améliorerait significativement la rentabilité globale. Négociez des volumes plus importants pour bénéficier d'économies d'échelle.</p></div>
+    <div class="conseil-card"><h4>📦 Gestion du stock via synchronisation</h4><p>La synchronisation automatique ventes → stock est maintenant active. Vérifiez régulièrement l'onglet Stock pour anticiper les ruptures. Commandez de nouveaux ballots dès qu'un article passe sous le seuil critique de 5 unités.</p></div>
+    <div class="conseil-card"><h4>💰 Politique de prix</h4><p>Le taux de marge de ${txMarge}% est correct mais certaines lignes (Chemise hm) affichent des marges négatives. Appliquez un prix plancher automatique = Prix achat × 1,12 minimum pour chaque catégorie.</p></div>
+    <div class="conseil-card"><h4>📱 Diversification Mobile Money</h4><p>100% des transactions sont sur Wave. Acceptez Orange Money et Free Money pour capter 8 à 12% de CA supplémentaire. Affichez les logos en boutique.</p></div>
+    <div class="conseil-card"><h4>📈 Saisonnalité</h4><p>Avril accélère sur Femme été et Bébé. Anticipez la saison avec des conteneurs orientés Femme été et Enfant léger. Prévoyez un stock tampon 2 semaines avant Tabaski pour les articles famille.</p></div>
+  </div>`;
+}
+
+// ================= NAVIGATION =================
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  const tabs=['dashboard','ventes','saisie','treso','stock','rapport'];
+  const idx=tabs.indexOf(id);
+  if(idx>=0)document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if(id==='treso')renderTreso();
+  if(id==='stock')renderStock();
+}
+
+function showToast(msg,type=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast '+(type==='warn'?'warn':type===true||type==='error'?'error':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),4000);
+}
+
+init();
+</script>
+</body>
+</html>
